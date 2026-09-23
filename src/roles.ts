@@ -1,0 +1,238 @@
+import {
+  can,
+  getDefaultPermissionsForRole,
+  hasPermission,
+  resolvePermissionSet,
+  roleAuthorityRank,
+} from "./permissions";
+
+export type UserRole =
+  | "student"
+  | "agent"
+  | "agency_owner"
+  | "instructor"
+  | "manager"
+  | "admin"
+  | "system";
+
+/** Built-in role slugs used across clients and Firestore rules. */
+export const ALL_ROLES: readonly UserRole[] = [
+  "student",
+  "agent",
+  "agency_owner",
+  "instructor",
+  "manager",
+  "admin",
+  "system",
+] as const;
+
+/** Product system roles (editable only by `system` in Admin). */
+export const SYSTEM_ROLE_IDS = [
+  "system",
+  "admin",
+  "manager",
+  "agency_owner",
+  "agent",
+  "student",
+] as const satisfies readonly UserRole[];
+
+/**
+ * Role IDs that may be targeted for group seed / auto-join pickers.
+ * This is a data filter (which roles can be selected), not an authz check.
+ */
+export const GROUP_SEED_ROLES = [
+  "student",
+  "agent",
+  "agency_owner",
+  "instructor",
+  "manager",
+  "admin",
+] as const satisfies readonly UserRole[];
+
+export type RoleOrPermissions =
+  | UserRole
+  | string
+  | string[]
+  | readonly string[]
+  | null
+  | undefined;
+
+export function parseRole(value: unknown): UserRole {
+  if (typeof value !== "string") return "student";
+  // Legacy every-benefits-us used "teacher" for course authors.
+  if (value === "teacher") return "instructor";
+  // Orphan anonymous-era docs; never treat as a live role.
+  if (value === "guest") return "student";
+  if ((ALL_ROLES as readonly string[]).includes(value)) {
+    return value as UserRole;
+  }
+  // Custom role slugs are stored as-is on users; treat as opaque string
+  // typed through UserRole for backwards compatibility with call sites.
+  if (value.trim()) {
+    return value as UserRole;
+  }
+  return "student";
+}
+
+/** Mega-role above admin — DB-only assignment and role-doc edits. */
+export function isSystemRole(role: UserRole | string) {
+  return role === "system";
+}
+
+export function canAuthorCourses(roleOrPermissions: RoleOrPermissions) {
+  return can(roleOrPermissions, "courses.author");
+}
+
+export function canAuthorPaths(roleOrPermissions: RoleOrPermissions) {
+  return can(roleOrPermissions, "paths.author");
+}
+
+export function canManageCourses(roleOrPermissions: RoleOrPermissions) {
+  return (
+    can(roleOrPermissions, "courses.manage") ||
+    can(roleOrPermissions, "courses.publish")
+  );
+}
+
+export function canEditCourse(
+  course: { createdBy: string; status: string },
+  viewer: { uid: string; role: UserRole; permissions?: readonly string[] },
+) {
+  const perms = viewer.permissions ?? getDefaultPermissionsForRole(viewer.role);
+  if (hasPermission(perms, "courses.edit.any")) return true;
+  if (!hasPermission(perms, "courses.author")) return false;
+  return course.createdBy === viewer.uid && course.status !== "published";
+}
+
+export function canEditPath(
+  path: { createdBy: string; status: string },
+  viewer: { uid: string; role: UserRole; permissions?: readonly string[] },
+) {
+  const perms = viewer.permissions ?? getDefaultPermissionsForRole(viewer.role);
+  if (hasPermission(perms, "paths.edit.any")) return true;
+  if (!hasPermission(perms, "paths.author")) return false;
+  return path.createdBy === viewer.uid && path.status !== "published";
+}
+
+export function belongsInDefaultAgentGroup(
+  roleOrPermissions: RoleOrPermissions,
+) {
+  return can(roleOrPermissions, "chats.groups.default.join");
+}
+
+export function canAccessTools(roleOrPermissions: RoleOrPermissions) {
+  return can(roleOrPermissions, "tools.access");
+}
+
+export function canCreateChatGroups(roleOrPermissions: RoleOrPermissions) {
+  return can(roleOrPermissions, "chats.groups.create");
+}
+
+export function canConfigureGroupAutoJoin(
+  roleOrPermissions: RoleOrPermissions,
+) {
+  return can(roleOrPermissions, "chats.groups.autojoin.configure");
+}
+
+export function canParticipateInForums(
+  roleOrPermissions: RoleOrPermissions,
+  isAnonymous: boolean,
+) {
+  if (isAnonymous) return false;
+  const perms = resolvePermissionSet(roleOrPermissions);
+  if (typeof roleOrPermissions === "string" && !roleOrPermissions.trim()) {
+    return false;
+  }
+  return hasPermission(perms, "forums.participate");
+}
+
+export function canParticipateInChats(
+  roleOrPermissions: RoleOrPermissions,
+  isAnonymous: boolean,
+) {
+  if (isAnonymous) return false;
+  return can(roleOrPermissions, "chats.participate");
+}
+
+export function canAccessAdmin(roleOrPermissions: RoleOrPermissions) {
+  return (
+    can(roleOrPermissions, "admin.access") ||
+    can(roleOrPermissions, "apps.admin.access")
+  );
+}
+
+/** Override / Commission Management portal — platform admins only (not managers by default). */
+export function canAccessPayments(roleOrPermissions: RoleOrPermissions) {
+  return (
+    can(roleOrPermissions, "apps.payments.access") ||
+    can(roleOrPermissions, "platform.manage")
+  );
+}
+
+/**
+ * Granular commission ops. `apps.payments.access` / `platform.manage` imply
+ * `commission.view`. Mutating ops require the explicit key (or platform.manage).
+ */
+export function hasCommissionPermission(
+  roleOrPermissions: RoleOrPermissions,
+  key:
+    | "commission.view"
+    | "commission.upload"
+    | "commission.resolve"
+    | "commission.calculate"
+    | "commission.approve"
+    | "commission.publish"
+    | "commission.manageRules"
+    | "commission.manageImportProfiles"
+    | "commission.viewAudit"
+    | "commission.statements.self",
+) {
+  if (can(roleOrPermissions, "platform.manage")) return true;
+  if (key === "commission.view" && canAccessPayments(roleOrPermissions)) {
+    return true;
+  }
+  return can(roleOrPermissions, key);
+}
+
+export function canManagePlatform(roleOrPermissions: RoleOrPermissions) {
+  return can(roleOrPermissions, "platform.manage");
+}
+
+export function canModerateForums(roleOrPermissions: RoleOrPermissions) {
+  return can(roleOrPermissions, "forums.moderate");
+}
+
+export function canAccessStudio(roleOrPermissions: RoleOrPermissions) {
+  return (
+    can(roleOrPermissions, "apps.studio.access") ||
+    can(roleOrPermissions, "courses.author")
+  );
+}
+
+/** Agency self-service in Pulse Web (/agency). */
+export function canManageAgency(roleOrPermissions: RoleOrPermissions) {
+  return (
+    can(roleOrPermissions, "org.tree.read") &&
+    can(roleOrPermissions, "org.agency.update")
+  );
+}
+
+/**
+ * Pulse Web /agency — role permissions or direct ownership in orgNodes.ownerUids
+ * (staff co-owners keep admin/manager role without agency_owner slug).
+ */
+export function canAccessAgencyPortal(
+  roleOrPermissions: RoleOrPermissions,
+  hasOwnedAgencies: boolean,
+): boolean {
+  return canManageAgency(roleOrPermissions) || hasOwnedAgencies;
+}
+
+/** Agent+ may start the agency onboarding CTA when they do not yet own an agency. */
+export function canRequestAgencyOnboarding(
+  role: string | null | undefined,
+): boolean {
+  const trimmed = role?.trim();
+  if (!trimmed) return false;
+  return roleAuthorityRank(trimmed) >= roleAuthorityRank("agent");
+}
