@@ -4,8 +4,8 @@
  */
 export const USER_ORG_ROLES_CALLABLES = {
   listUsersForAdmin: "listUsersForAdmin",
-  createUserForAdmin: "createUserForAdmin",
-  updateUserForAdmin: "updateUserForAdmin",
+  adminCreateUser: "adminCreateUser",
+  adminUpdateUser: "adminUpdateUser",
   adminDeactivateUser: "adminDeactivateUser",
   adminReactivateUser: "adminReactivateUser",
   bulkSetUserApproval: "bulkSetUserApproval",

@@ -4,8 +4,8 @@
  */
 export declare const USER_ORG_ROLES_CALLABLES: {
     readonly listUsersForAdmin: "listUsersForAdmin";
-    readonly createUserForAdmin: "createUserForAdmin";
-    readonly updateUserForAdmin: "updateUserForAdmin";
+    readonly adminCreateUser: "adminCreateUser";
+    readonly adminUpdateUser: "adminUpdateUser";
     readonly adminDeactivateUser: "adminDeactivateUser";
     readonly adminReactivateUser: "adminReactivateUser";
     readonly bulkSetUserApproval: "bulkSetUserApproval";
