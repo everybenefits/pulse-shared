@@ -49,3 +49,4 @@ export const userProfileFixtureSchema = z.object({
 
 export type UserProfileFixture = z.infer<typeof userProfileFixtureSchema>;
 export type AccountStatus = z.infer<typeof accountStatusSchema>;
+/** Prefer `ApprovalStatus` from `./profile` — kept via schema for fixtures only. */

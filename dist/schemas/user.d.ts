@@ -65,4 +65,5 @@ export declare const userProfileFixtureSchema: z.ZodObject<{
 }, z.core.$strip>;
 export type UserProfileFixture = z.infer<typeof userProfileFixtureSchema>;
 export type AccountStatus = z.infer<typeof accountStatusSchema>;
+/** Prefer `ApprovalStatus` from `./profile` — kept via schema for fixtures only. */
 //# sourceMappingURL=user.d.ts.map

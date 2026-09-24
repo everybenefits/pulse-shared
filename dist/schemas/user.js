@@ -43,3 +43,4 @@ exports.userProfileFixtureSchema = zod_1.z.object({
     createdAt: zod_1.z.string().datetime().nullable(),
     updatedAt: zod_1.z.string().datetime().nullable(),
 });
+/** Prefer `ApprovalStatus` from `./profile` — kept via schema for fixtures only. */

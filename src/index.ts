@@ -13,3 +13,4 @@ export * from "./banners";
 export * from "./polls";
 export * from "./release-notes";
 export * from "./schemas/index";
+export * from "./contracts/index";
