@@ -36,13 +36,16 @@ exports.LOCAL_DEV_APP_ORIGINS = [
     "http://127.0.0.1:3005",
 ];
 exports.APP_HOSTING_PREVIEW_SUFFIX = "-every-benefits-us.us-central1.hosted.app";
+/** Matches Firebase App Hosting preview hosts only (not arbitrary `endsWith`). */
 exports.APP_HOSTING_PREVIEW_ORIGIN_RE = /^https:\/\/[a-z0-9-]+-every-benefits-us\.us-central1\.hosted\.app$/i;
+/**
+ * True for App Hosting preview URLs.
+ * In production, callers should also require `PULSE_SSO_ALLOW_PREVIEWS=true`
+ * before trusting these for SSO return URLs.
+ */
 function isAppHostingPreviewOrigin(origin) {
     const trimmed = origin.trim();
-    if (!trimmed.startsWith("https://"))
-        return false;
-    const host = trimmed.slice("https://".length).split("/")[0] ?? "";
-    return host.endsWith(exports.APP_HOSTING_PREVIEW_SUFFIX);
+    return exports.APP_HOSTING_PREVIEW_ORIGIN_RE.test(trimmed);
 }
 /** Space-separated production origins for CSP directives. */
 function productionAppOriginsCsp() {
