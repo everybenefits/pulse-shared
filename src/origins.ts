@@ -18,6 +18,8 @@ export const PRODUCTION_APP_ORIGINS = [
   "https://payments--every-benefits-us.us-east4.hosted.app",
   "https://developers--every-benefits-us.us-east4.hosted.app",
   "https://developers-web-app--every-benefits-us.us-central1.hosted.app",
+  "https://directory.everybenefits.us",
+  "https://directory--every-benefits-us.us-east4.hosted.app",
 ] as const;
 
 export const LOCAL_DEV_APP_ORIGINS = [
@@ -31,6 +33,8 @@ export const LOCAL_DEV_APP_ORIGINS = [
   "http://127.0.0.1:3004",
   "http://localhost:3005",
   "http://127.0.0.1:3005",
+  "http://localhost:3006",
+  "http://127.0.0.1:3006",
 ] as const;
 
 export const APP_HOSTING_PREVIEW_SUFFIX =

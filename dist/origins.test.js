@@ -10,6 +10,10 @@ const csp_1 = require("./csp");
         (0, vitest_1.expect)(origins_1.PRODUCTION_APP_ORIGINS).toContain("https://payments.everybenefits.us");
         (0, vitest_1.expect)(origins_1.PRODUCTION_APP_ORIGINS).toContain("https://developers.everybenefits.us");
     });
+    (0, vitest_1.it)("includes the Directory custom domain and App Hosting backend", () => {
+        (0, vitest_1.expect)(origins_1.PRODUCTION_APP_ORIGINS).toContain("https://directory.everybenefits.us");
+        (0, vitest_1.expect)(origins_1.PRODUCTION_APP_ORIGINS).toContain("https://directory--every-benefits-us.us-east4.hosted.app");
+    });
     (0, vitest_1.it)("recognizes App Hosting preview hosts via strict regex", () => {
         (0, vitest_1.expect)((0, origins_1.isAppHostingPreviewOrigin)("https://pulse-web-app--pr12-abcd-every-benefits-us.us-central1.hosted.app")).toBe(true);
         (0, vitest_1.expect)((0, origins_1.isAppHostingPreviewOrigin)("https://evil.example")).toBe(false);
