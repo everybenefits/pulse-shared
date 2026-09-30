@@ -18,6 +18,13 @@ describe("origins inventory", () => {
     );
   });
 
+  it("includes the Directory custom domain and App Hosting backend", () => {
+    expect(PRODUCTION_APP_ORIGINS).toContain("https://directory.everybenefits.us");
+    expect(PRODUCTION_APP_ORIGINS).toContain(
+      "https://directory--every-benefits-us.us-east4.hosted.app",
+    );
+  });
+
   it("recognizes App Hosting preview hosts via strict regex", () => {
     expect(
       isAppHostingPreviewOrigin(
